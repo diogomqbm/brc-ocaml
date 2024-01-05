@@ -1,31 +1,18 @@
 open Riot
 
-module Parsed = struct
-  type t = { name : string; value : float }
-
-  let make name value = { name; value }
-end
-
 type t = {
   map : (string, Calculated.t) Hashtbl.t;
   total : int;
   mutable computed : int;
 }
 
-type Message.t += Add of string | Finish
+type Message.t += Add of Parsed.t | Finish
 
 let pid = ref None
 
-let parse line =
-  let items = String.split_on_char ';' line in
-  let name = List.hd items in
-  let value = float_of_string (List.nth items 1) in
-  Parsed.make name value
-
 let rec loop state =
   (match receive () with
-  | Add line ->
-      let parsed = parse line in
+  | Add parsed ->
       let new_list =
         match Hashtbl.find_opt state.map parsed.name with
         | Some acc -> Calculated.compute acc parsed.value
