@@ -1,17 +1,15 @@
 open Riot
 
 module Printer = struct
-  let print k v =
+  let print k (v : Calculated.t) =
     let _pid =
       spawn_link (fun () ->
-          let computed = Calculated.from_values v in
-          Printf.printf "\n%s=%.2f/%.2f/%.2f" k computed.min computed.mean
-            computed.max)
+          Printf.printf "\n%s=%.2f/%.2f/%.2f" k v.min v.mean v.max)
     in
     ()
 end
 
-type Message.t += Print of string * float list
+type Message.t += Print of string * Calculated.t
 
 let rec loop () =
   (match receive () with Print (name, item) -> Printer.print name item);
@@ -21,4 +19,6 @@ let rec loop () =
 let pid = ref None
 
 let finish k v =
-  match pid.contents with Some pid -> send pid (Print (k, v)) | None -> ()
+  match pid.contents with
+  | Some pid -> send pid (Print (k, v))
+  | None -> print_endline "Oops!"

@@ -3,7 +3,7 @@ let read_file filename =
   try
     while true do
       let line = input_line in_channel in
-      let _pid = Riot.spawn_link (fun () -> Queue.push line) in
+      let _pid = Riot.spawn (fun () -> Hashmap.add line) in
       ()
     done
   with

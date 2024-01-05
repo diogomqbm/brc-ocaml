@@ -7,7 +7,7 @@ module Parsed = struct
 end
 
 type t = {
-  map : (string, float list) Hashtbl.t;
+  map : (string, Calculated.t) Hashtbl.t;
   total : int;
   mutable computed : int;
 }
@@ -28,8 +28,8 @@ let rec loop state =
       let parsed = parse line in
       let new_list =
         match Hashtbl.find_opt state.map parsed.name with
-        | Some parsed_list -> parsed.value :: parsed_list
-        | None -> [ parsed.value ]
+        | Some acc -> Calculated.compute acc parsed.value
+        | None -> Calculated.from_value parsed.value
       in
       Hashtbl.replace state.map parsed.name new_list;
       state.computed <- state.computed + 1;
