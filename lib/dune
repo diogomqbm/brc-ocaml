@@ -1,0 +1,6 @@
+(library
+ (name brc)
+ (libraries riot)
+ (preprocess (pps ppx_deriving.show))
+ )
+ 
