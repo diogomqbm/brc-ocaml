@@ -3,8 +3,8 @@ open Riot
 module Printer = struct
   let print k (v : Calculated.t) =
     let _pid =
-      spawn_link (fun () ->
-          Printf.printf "\n%s=%.2f/%.2f/%.2f" k v.min v.mean v.max)
+      spawn (fun () ->
+          Logger.info (fun f -> f "\n%s=%.2f/%.2f/%.2f" k v.min v.mean v.max))
     in
     ()
 end
@@ -18,7 +18,11 @@ let rec loop () =
 
 let pid = ref None
 
-let finish k v =
+let finish (k, v) =
   match pid.contents with
   | Some pid -> send pid (Print (k, v))
   | None -> print_endline "Oops!"
+
+let make () =
+  pid := Some (Riot.self ());
+  loop ()
