@@ -5,8 +5,6 @@ let () =
   Riot.run @@ fun () ->
   let _pid = Riot.Logger.start () in
   ();
-  Hashmap.make 1000;
-  let filename = "measurements2.txt" in
-  let _content = Files.read_file filename in
-  ();
-  App.make ()
+  Hashmap.make ();
+  let filename = "measurements.txt" in
+  Files.read_file filename

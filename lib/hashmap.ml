@@ -1,11 +1,15 @@
 open Riot
 
-type t = {
-  map : (string, Calculated.t) Hashmap.t;
-  total : int;
-  mutable computed : int;
-}
+module Printer = struct
+  let print (k, (v : Calculated.t)) =
+    let pid =
+      spawn (fun () ->
+          Logger.info (fun f -> f "\n%s=%.2f/%.2f/%.2f" k v.min v.mean v.max))
+    in
+    wait_pids [ pid ]
+end
 
+type t = { map : (string, Calculated.t) Hashmap.t; mutable computed : int }
 type Message.t += Add of Parsed.t | Finish
 
 let pid = ref None
@@ -20,18 +24,20 @@ let rec loop state =
       in
       Hashmap.replace state.map parsed.name new_list;
       state.computed <- state.computed + 1;
-      Logger.info (fun f -> f "Processed %d lines" state.computed);
-      if Int.equal state.computed (state.total - 1) then send (self ()) Finish
-  | Finish -> Hashmap.iter state.map App.finish);
+      Logger.info (fun f -> f "Processed %d lines" state.computed)
+  | Finish -> Hashmap.iter state.map Printer.print);
   loop state
 [@@warning "-8"]
 
 let add line =
   match pid.contents with Some pid -> send pid (Add line) | None -> ()
 
-let make total =
+let finish () =
+  match pid.contents with Some pid -> send pid Finish | None -> ()
+
+let make () =
   pid :=
     Some
       (spawn_link (fun () ->
-           let state = { map = Hashmap.create 1000; total; computed = 0 } in
+           let state = { map = Hashmap.create 1000; computed = 0 } in
            loop state))

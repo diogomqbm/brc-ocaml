@@ -1,3 +1,2 @@
 _build
-measurements.txt
-measurements2.txt
+measurements*.txt
