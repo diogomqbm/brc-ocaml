@@ -35,7 +35,7 @@ let read_lines ~filename ~offset ~limit () =
   ()
 
 let read_file filename =
-  let chunk_size = 100000 in
+  let chunk_size = 12 in
   let state = Riot.File.stat filename in
   let size = state.st_size in
   let chunks = size / chunk_size in
@@ -46,7 +46,12 @@ let read_file filename =
         let limit =
           if is_last then size else ((chunk + 1) * chunk_size) - offset
         in
-        Riot.spawn (read_lines ~filename ~offset ~limit))
+        Riot.spawn (fun () ->
+            try read_lines ~filename ~offset ~limit ()
+            with Unix.Unix_error _ ->
+              Riot.Logger.debug (fun f -> f "Found the Unix error");
+              Riot.sleep 1.0;
+              read_lines ~filename ~offset ~limit ()))
   in
 
   Riot.wait_pids pids;
