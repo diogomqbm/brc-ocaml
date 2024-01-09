@@ -1,4 +1,5 @@
-open Riot.IO
+open Riot
+open IO
 
 [@@@warning "-8"]
 
@@ -27,7 +28,7 @@ let read_lines ~filename ~offset ~limit () =
         if is_line then Riot.Logger.info (fun f -> f "line: %S" line);
 
         if is_line then
-          Option.iter (fun p -> Hashmap.add p) (Parsed.from_line line);
+          Option.iter (fun p -> Storage.add p) (Parsed.from_line line);
 
         if is_line then read_line "" else read_line line
   in
@@ -56,5 +57,5 @@ let read_file filename =
 
   Riot.wait_pids pids;
   Riot.Logger.info (fun f -> f "done");
-  Hashmap.finish ();
+  Storage.finish ();
   Riot.sleep 0.2
