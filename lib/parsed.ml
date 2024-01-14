@@ -13,7 +13,6 @@ let name t = t.name
 exception Incomplete_line
 
 let from_line line =
-  Riot.Logger.debug (fun f -> f "Processing line %s" line);
   if String.length line <= 5 then None
   else
     let items = String.split_on_char ';' line in

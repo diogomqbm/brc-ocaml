@@ -23,8 +23,7 @@ let rec loop state =
         | None -> Computed_line.from_value parsed.value
       in
       Hashmap.replace state.map parsed.name new_list;
-      state.computed <- state.computed + 1;
-      Logger.info (fun f -> f "Processed %d lines" state.computed)
+      state.computed <- state.computed + 1
   | Finish -> Hashmap.iter state.map Printer.print);
   loop state
 [@@warning "-8"]

@@ -12,7 +12,7 @@ let read_lines ~filename ~offset ~limit () =
   let read_until_now = ref 0 in
   let[@warning "-8"] rec read_line line =
     let (Ok bytes) = Riot.IO.read ~buf reader in
-    if bytes = 0 then line
+    if bytes = 0 then ()
     else
       let data = Bytes.to_string buf in
       let is_line = String.equal data "\n" in
@@ -21,12 +21,9 @@ let read_lines ~filename ~offset ~limit () =
       let should_compute_line = read_until_now.contents >= limit && is_line in
 
       if should_compute_line then
-        Riot.Logger.info (fun f -> f "Reached limit: %d, %s" limit line);
-
-      if should_compute_line then
         Option.iter (fun p -> Storage.add p) (Parsed.from_line line);
 
-      if should_compute_line then line
+      if should_compute_line then ()
       else
         let line = if is_line then line else line ^ data in
 
@@ -36,13 +33,15 @@ let read_lines ~filename ~offset ~limit () =
         if is_line then read_line "" else read_line line
   in
   let _ = read_line "" in
-  ()
+  File.close file
 
 let read_file filename =
-  let chunk_size = 1000 * 1024 in
+  let chunk_size = 100 * 1024 in
   let state = Riot.File.stat filename in
   let size = state.st_size in
   let chunks = size / chunk_size in
+  Riot.Logger.info (fun f -> f "Breaking into %d chunks" chunks);
+  let chunks = if chunks = 0 then 1 else chunks in
   let pids =
     List.init chunks (fun chunk ->
         let is_last = chunk + 1 = chunks in
@@ -60,5 +59,4 @@ let read_file filename =
 
   Riot.wait_pids pids;
   Riot.Logger.info (fun f -> f "done");
-  Storage.finish ();
-  Riot.sleep 0.2
+  Storage.finish ()
