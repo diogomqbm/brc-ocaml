@@ -1,7 +1,7 @@
 open Riot
 
 module Printer = struct
-  let print (k, (v : Calculated.t)) =
+  let print (k, (v : Computed_line.t)) =
     let pid =
       spawn (fun () ->
           Logger.info (fun f -> f "\n%s=%.2f/%.2f/%.2f" k v.min v.mean v.max))
@@ -9,7 +9,7 @@ module Printer = struct
     wait_pids [ pid ]
 end
 
-type t = { map : (string, Calculated.t) Hashmap.t; mutable computed : int }
+type t = { map : (string, Computed_line.t) Hashmap.t; mutable computed : int }
 type Message.t += Add of Parsed.t | Finish
 
 let pid = ref None
@@ -19,8 +19,8 @@ let rec loop state =
   | Add parsed ->
       let new_list =
         match Hashmap.get state.map parsed.name with
-        | Some acc -> Calculated.compute acc parsed.value
-        | None -> Calculated.from_value parsed.value
+        | Some acc -> Computed_line.compute acc parsed.value
+        | None -> Computed_line.from_value parsed.value
       in
       Hashmap.replace state.map parsed.name new_list;
       state.computed <- state.computed + 1;

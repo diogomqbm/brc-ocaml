@@ -6,5 +6,5 @@ let () =
   let _pid = Riot.Logger.start () in
   ();
   Storage.make ();
-  let filename = "measurements3.txt" in
+  let filename = "measurements.txt" in
   Files.read_file filename

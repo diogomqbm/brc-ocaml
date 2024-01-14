@@ -8,7 +8,7 @@ let read_lines ~filename ~offset ~limit () =
   let _ = File.seek file ~off:offset in
   let reader = Riot.File.to_reader file in
 
-  let buf = Buffer.with_capacity 1 |> Buffer.to_bytes in
+  let buf = Bytes.with_capacity 1 in
   let read_until_now = ref 0 in
   let[@warning "-8"] rec read_line line =
     let (Ok bytes) = Riot.IO.read ~buf reader in
@@ -17,13 +17,18 @@ let read_lines ~filename ~offset ~limit () =
       let data = Bytes.to_string buf in
       let is_line = String.equal data "\n" in
       read_until_now := read_until_now.contents + 1;
-      if read_until_now.contents = limit then
+
+      let should_compute_line = read_until_now.contents >= limit && is_line in
+
+      if should_compute_line then
         Riot.Logger.info (fun f -> f "Reached limit: %d, %s" limit line);
-      if read_until_now.contents = limit then line
+
+      if should_compute_line then
+        Option.iter (fun p -> Storage.add p) (Parsed.from_line line);
+
+      if should_compute_line then line
       else
         let line = if is_line then line else line ^ data in
-
-        if is_line then Riot.Logger.info (fun f -> f "line: %S" line);
 
         if is_line then
           Option.iter (fun p -> Storage.add p) (Parsed.from_line line);
@@ -34,7 +39,7 @@ let read_lines ~filename ~offset ~limit () =
   ()
 
 let read_file filename =
-  let chunk_size = 10 in
+  let chunk_size = 1000 * 1024 in
   let state = Riot.File.stat filename in
   let size = state.st_size in
   let chunks = size / chunk_size in
