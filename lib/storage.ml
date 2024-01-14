@@ -39,5 +39,5 @@ let make () =
   pid :=
     Some
       (spawn_link (fun () ->
-           let state = { map = Hashmap.create 1000; computed = 0 } in
+           let state = { map = Hashmap.create (); computed = 0 } in
            loop state))
