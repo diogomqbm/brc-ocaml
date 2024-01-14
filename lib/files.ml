@@ -52,7 +52,7 @@ let read_file filename =
         Riot.spawn (fun () ->
             try read_lines ~filename ~offset ~limit ()
             with Unix.Unix_error _ ->
-              Riot.Logger.debug (fun f -> f "Found the Unix error");
+              Riot.Logger.debug (fun f -> f "Unix error");
               Riot.sleep 1.0;
               read_lines ~filename ~offset ~limit ()))
   in
