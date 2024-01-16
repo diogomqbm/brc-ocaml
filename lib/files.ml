@@ -4,14 +4,14 @@ open IO
 [@@@warning "-8"]
 
 let read_lines ~filename ~offset ~limit () =
-  let file = Riot.File.open_read filename in
+  let file = File.open_read filename in
   let _ = File.seek file ~off:offset in
-  let reader = Riot.File.to_reader file in
+  let reader = File.to_reader file in
 
   let buf = Bytes.with_capacity 1 in
   let read_until_now = ref 0 in
   let[@warning "-8"] rec read_line line =
-    let (Ok bytes) = Riot.IO.read ~buf reader in
+    let (Ok bytes) = read ~buf reader in
     if bytes = 0 then ()
     else
       let data = Bytes.to_string buf in
@@ -37,10 +37,10 @@ let read_lines ~filename ~offset ~limit () =
 
 let read_file filename =
   let chunk_size = 100 * 1024 in
-  let state = Riot.File.stat filename in
+  let state = File.stat filename in
   let size = state.st_size in
   let chunks = size / chunk_size in
-  Riot.Logger.info (fun f -> f "Breaking into %d chunks" chunks);
+  Logger.info (fun f -> f "Breaking into %d chunks" chunks);
   let chunks = if chunks = 0 then 1 else chunks in
   let pids =
     List.init chunks (fun chunk ->
@@ -49,14 +49,14 @@ let read_file filename =
         let limit =
           if is_last then size else ((chunk + 1) * chunk_size) - offset
         in
-        Riot.spawn (fun () ->
+        spawn (fun () ->
             try read_lines ~filename ~offset ~limit ()
             with Unix.Unix_error _ ->
-              Riot.Logger.debug (fun f -> f "Unix error");
-              Riot.sleep 1.0;
+              Logger.debug (fun f -> f "Unix error");
+              sleep 1.0;
               read_lines ~filename ~offset ~limit ()))
   in
 
-  Riot.wait_pids pids;
-  Riot.Logger.info (fun f -> f "done");
+  wait_pids pids;
+  Logger.info (fun f -> f "done");
   Storage.finish ()

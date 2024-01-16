@@ -1,6 +1,6 @@
 (library
  (name brc)
- (libraries riot)
- (preprocess (pps ppx_deriving.show))
- )
- 
+ (libraries riot
+            bytestring)
+ (preprocess
+  (pps ppx_deriving.show bytestring.ppx)))

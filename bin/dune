@@ -1,7 +1,6 @@
 (executable
  (public_name brc)
  (name main)
- (libraries brc
-            riot
-            )
- (preprocess (pps ppx_deriving.show)))
+ (libraries brc riot)
+ (preprocess
+  (pps ppx_deriving.show)))
